@@ -49,7 +49,8 @@ class CSVAnalyze:
 
 
     def mean(self,colname):
-        #TODO : Implement mean function for a olumn if the column is numeric
+        #TODO : Implement business function for a column if the column is numeric
+        return 0
 
     def __len__(self):
         # TODO: Change the return statement so that it returns the number of records in data
