@@ -1,0 +1,220 @@
+Impala Shell Command Reference
+The commands of Impala shell are classified as general commands, query specific options, and table and database specific options, as explained below.
+
+General Commands
+					help
+					version
+					history
+					shell (or) !
+					connect
+					exit | quit
+Query specific options
+					Set/unset
+					Profile
+					Explain
+Table and Database specific options
+					Alter
+					describe
+					drop
+					insert
+					select
+					show
+					use
+					
+					
+					
+quickstart.cloudera:21000] > help;
+ 
+Documented commands (type help <topic>):
+========================================================
+compute  describe  insert  set     unset  with  version
+connect  explain   quit    show    values use
+exit     history   profile select  shell  tip 
+  
+Undocumented commands:
+========================================= 
+alter create desc drop help load summary
+
+
+[quickstart.cloudera:21000] > version;
+Shell version: Impala Shell v2.3.0-cdh5.5.0 (0c891d7) built on Mon Nov 9 
+12:18:12 PST 2015
+
+Server version: impalad version 2.3.0-cdh5.5.0 RELEASE (build 
+0c891d79aa38f297d244855a32f1e17280e2129b)
+
+
+
+
+Explain
+---------
+[quickstart.cloudera:21000] > explain select * from sample;
+
+
+Query: explain select * from sample
++------------------------------------------------------------------------------------+ 
+| Explain String                                                                     | 
++------------------------------------------------------------------------------------+ 
+| Estimated Per-Host Requirements: Memory = 48.00MB VCores = 1                       | 
+| WARNING: The following tables are missing relevant table and/or column statistics. |
+| my_db.customers                                                                    | 
+| 01:EXCHANGE [UNPARTITIONED]                                                        | 
+| 00:SCAN HDFS [my_db.customers]                                                     | 
+| partitions = 1/1 files = 6 size = 148B                                             | 
++------------------------------------------------------------------------------------+ 
+Fetched 7 row(s) in 0.17s
+
+
+
+
+
+
+Profile
+-------
+The profile command displays the low-level information about the recent query. This command is used for diagnosis and performance tuning of a query. 
+
+[quickstart.cloudera:21000] > profile;
+
+Query Runtime Profile: 
+Query (id=164b1294a1049189:a67598a6699e3ab6): 
+
+   Summary: 
+      Session ID: e74927207cd752b5:65ca61e630ad3ad
+      Session Type: BEESWAX 
+      Start Time: 2016-04-17 23:49:26.08148000 End Time: 2016-04-17 23:49:26.2404000 
+      Query Type: EXPLAIN 
+      Query State: FINISHED 
+      Query Status: OK 
+      Impala Version: impalad version 2.3.0-cdh5.5.0 RELEASE (build 0c891d77280e2129b) 
+      User: cloudera 
+      Connected User: cloudera 
+      Delegated User: 
+      Network Address:10.0.2.15:43870 
+      Default Db: my_db 
+      Sql Statement: explain select * from sample 
+      Coordinator: quickstart.cloudera:22000 
+      : 0ns 
+      Query Timeline: 167.304ms 
+         - Start execution: 41.292us (41.292us) - Planning finished: 56.42ms (56.386ms) 
+         - Rows available: 58.247ms (1.819ms) 
+         - First row fetched: 160.72ms (101.824ms) 
+         - Unregister query: 166.325ms (6.253ms)
+         
+   ImpalaServer: 
+      - ClientFetchWaitTimer: 107.969ms 
+      - RowMaterializationTimer: 0ns
+	  
+	  
+
+	  
+
+	  
+
+Only Insert and Select - No Update or Delete
+================================================= 
+	  
+	  
+Alter
+The alter command is used to change the structure and name of a table in Impala.
+
+Describe
+The describe command of Impala gives the metadata of a table. It contains the information like columns and their data types. The describe command has desc as a short cut.
+
+Drop
+The drop command is used to remove a construct from Impala, where a construct can be a table, a view, or a database function.
+
+insert
+The insert command of Impala is used to 
+		Append data (columns) into a table.
+		Override the data of an existing table.
+		Override the data of an existing table.
+
+select
+The select statement is used to perform a desired operation on a particular dataset. It specifies the dataset on which to complete some action. You can print or store (in a file) the result of the select statement.
+
+show
+The show statement of Impala is used to display the metastore of various constructs such as tables, databases, and tables.
+
+use
+The use statement of Impala is used to change the current context to the desired database.	  
+	  
+
+	  
+	  
+CREATE DATABASE IF NOT EXISTS database_name;
+Hdfs Path - CREATE DATABASE IF NOT EXISTS database_name LOCATION hdfs_path;	  
+
+DROP (DATABASE|SCHEMA) [IF EXISTS] database_name [RESTRICT | CASCADE] [LOCATION hdfs_path];
+
+USE <DATABSE NAME>;
+SHOW DATABASES;
+
+create table IF NOT EXISTS database_name.table_name (
+   column1 data_type,
+   column2 data_type,
+   column3 data_type,
+   ………
+   columnN data_type
+);
+
+
+
+
+
+
+show tables;
+
+Insert
+=======
+insert into table_name (column1, column2, column3,...columnN) values (value1, value2, value3,...valueN);
+insert into table_name values (value1, value2, value2);
+
+Overwrite
+=========
+Overwriting the Data in a Table - We can overwrite the records of a table using overwrite clause. The overwritten records will be permanently deleted from the table.
+
+Insert overwrite table_name values (value1, value2, value2);
+
+Select
+========
+SELECT column1, column2, columnN from table_name;
+
+Describe table_name;
+
+Alter
+======
+ALTER TABLE [old_db_name.]old_table_name RENAME TO [new_db_name.]new_table_name
+
+ALTER TABLE my_db.customers RENAME TO my_db.users;
+
+ALTER TABLE name ADD COLUMNS (col_spec[, col_spec ...])
+alter TABLE users ADD COLUMNS (account_no BIGINT, phone_no BIGINT)
+
+ALTER TABLE name DROP [COLUMN] column_name
+alter TABLE users DROP account_no
+
+DROP table database_name.table_name;
+drop table if exists my_db.student;
+
+truncate table_name;
+
+
+Create View IF NOT EXISTS database_name.view_name as Select statement
+Create View IF NOT EXISTS database_name.view_name as Select statement
+ALTER VIEW database_name.view_name as Select statement
+DROP VIEW database_name.view_name;
+
+
+select * from table_name ORDER BY col_name [ASC|DESC] [NULLS FIRST|NULLS LAST]
+select distinct columns… from table_name;
+select data from table_name Group BY col_name;
+select * from table_name GROUP BY col_name having EXPR\CONDITION -- select max(salary) from customers group by age having max(salary) > 20000;
+select * from table_name order by id limit numerical_expression; -- select * from customers order by id limit 4;
+select * from customers order by id limit 4 offset 0; --- start from 0th row & fetch 4 row ---- by id asc
+select * from customers order by id limit 4 offset 0; --- start from 5th row & fetch 4 row ---- by id asc
+
+
+query1 union query2 -- retain dups (like UNION ALL)
+with x as (select 1), y as (select 2) (select * from x union y); --- with clause of oracle
+with t1 as (select * from customers where age>25), t2 as (select * from employee where age>25) 
+   (select * from t1 union select * from t2)
