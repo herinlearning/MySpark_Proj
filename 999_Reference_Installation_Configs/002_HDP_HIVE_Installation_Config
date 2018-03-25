@@ -532,3 +532,4 @@ goto HDFS - make hive directories and give access to hive to use it to hive user
 </property>
 
 </configuration>
+

@@ -218,3 +218,4 @@ query1 union query2 -- retain dups (like UNION ALL)
 with x as (select 1), y as (select 2) (select * from x union y); --- with clause of oracle
 with t1 as (select * from customers where age>25), t2 as (select * from employee where age>25) 
    (select * from t1 union select * from t2)
+
