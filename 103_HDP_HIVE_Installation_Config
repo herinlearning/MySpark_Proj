@@ -1,30 +1,12 @@
-Hive
-=====
-
-Schema on Read - Cannot enforce schema while writing.
-Writing is pure data dump
-
-NO constraints - No update or deleted based on conditions
-
-Joins - 
-========
-Support only EQUI Joins
-Do not Support Natural Joins --- where join clause is implicit - equality conditions on all columns which are common to 2 tables 
+Hadoop Installation - 
+=========================================
 
 
-Subqueries 
-=============
-Specific not allowed 
-
-UNION - Allowed
-
-Intersect or Minus
-IN and EXISTS -limited
+Standalone
+Psuedo
+Cluster
 
 
-UDF
-====
-Incredibily powerful
 
 Installation - Psuedo Mode Cluster on machine
 --------------------------------------------
