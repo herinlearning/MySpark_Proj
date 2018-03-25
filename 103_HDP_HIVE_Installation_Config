@@ -1,3 +1,23 @@
+Hadoop FS Blocksystem
+=======================
+HDFS config 
+
+128MB block size
+	- one block of data is read from disk at any time
+	- linmited by datra transfer rate -- roughly 100MB/sec
+	- take times to seek a block --- move head to seek the block
+	- minimized the seek and transferred rate
+	- seek 1% of data transfer time - 128MB
+	- reducing seek time and max size of datablock
+	- mapreduce - map works on one block of data - 128MB
+	- stored across the datanodes in the cluster
+	- Namenode - how blocks are seperated acorss datanode
+	- Namenode - indexing of metadata
+	- replication factor - robust fault tolerant
+	- NameNode - store this replica information of the blocks also
+
+
+
 Hadoop Installation - 
 =========================================
 
