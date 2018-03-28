@@ -1,0 +1,466 @@
+Hive
+=====
+
+Schema on Read - Cannot enforce schema while writing.
+Writing is pure data dump
+
+NO constraints - No update or deleted based on conditions
+
+Joins - 
+========
+Support only EQUI Joins
+Do not Support Natural Joins --- where join clause is implicit - equality conditions on all columns which are common to 2 tables 
+
+
+Subqueries 
+=============
+Specific not allowed 
+
+UNION - Allowed
+
+Intersect or Minus
+IN and EXISTS -limited
+
+
+UDF
+====
+Incredibily powerful
+
+
+HDFS config 
+============
+
+128MB block size
+	- one block of data is read from disk at any time
+	- linmited by datra transfer rate -- roughly 100MB/sec
+	- take times to seek a block --- move head to seek the block
+	- minimized the seek and transferred rate
+	- seek 1% of data transfer time - 128MB
+	- reducing seek time and max size of datablock
+	- mapreduce - map works on one block of data - 128MB
+	- stored across the datanodes in the cluster
+	- Namenode - how blocks are seperated acorss datanode
+	- Namenode - indexing of metadata
+	- replication factor - robust fault tolerant
+	- NameNode - store this replica information of the blocks also
+
+
+
+==================================================================
+HIVE
+==================================================================
+
+SCHEMA ON READ
+
+
+
+DATATYPES
+============
+
+PRIMITIVE
+			boolean, numeric, string and timestamp
+			numeric - TINYINT, SMALLINT, INT, BIGINT
+					  DECIMAL --- FLOAT and DOUBLE
+			string - STRING, CHAR (6 byte), VARCHAR
+			timestamp - TIMESTAMP, DATE
+
+
+
+COLLECTION
+			
+			ARRAY,MAP,STRUCT,UNION
+			
+
+			ARRAY -- List of same datatype -- inherent positioning ---- F[0],F[1],F[2] -- indexing
+				  -- array can be of PRIMITIVE datatype -- only boolean, numeric, string, timestamp
+				  -- definition     COLUMN_NAME   ARRAY<VARCHAR (1000)>
+
+
+			MAP   -- more than one PRIMITIVE datatype
+				  -- key value pair
+				  -- keys are unique and mapped to a value
+				  -- create table def 
+				  						 COLUMN_NAME MAP<STRING, ARRAY<VARCHAR(1000)>
+
+
+			STRUCT
+				  -- logical group of variables -- whole bunch of variable
+				  -- array will be same datatype, but struct can be variety of datatype
+				  -- complex datatype
+				  -- lets say student -- logical group ==== name, student_id, tution_fees
+				  -- create table 
+				  						COLUMN_NAME STRUCT<a:string, b:int, c:float>
+
+
+			UNION
+				  -- one of many datatype -- can be either string, boolean, DECIMAL
+				  -- create table
+				  						COLUMN_NAME UNIONTYPE<STRING,INT,BOOLEAN>
+
+
+
+
+			
+TABLES
+========
+
+MANAGED TABLES
+
+		managed inside warehouse directory
+	
+
+
+
+EXTERNAL TABLES
+
+		exists inside warehouse directory
+		metadata is still stored in metastore
+		table is dropped but file is still persits
+		have existance outside of hive
+		underlying data is used between multiple application
+		by using EXTERNAL keyword
+
+
+TEMPORARY TABLES
+
+		temporary data - deleted at end of session
+		do not support partition or indexes
+		allow temp table as permanent table
+		by using TEMPORARY keyword
+		mask a permnant table by default - risky
+
+
+
+No constraints, No Primary key
+
+
+
+
+DUMP DATA into TABLES
+========================
+	INSERT INTO TABLE VALUES (v1,v2,v3,.....)
+
+
+	load data local inpath '/app/lcdb/herin/customers.txt' 
+	overwrite into table <table_name>
+
+
+	CREATE TABLE <table_name>
+	insert overwrite <table_name> 
+	select c1, c2, ............. from  t1
+
+	CREATE EXTERNAL TABLE <external_table_name>
+	(col1 datatype,
+	 col2 datatype)
+	location '/user/external_tables/';
+
+
+
+MULTIPLE TABLE INSERT 
+===========================
+
+from one source, insert into multiple destination
+
+	from <source_table>
+
+	insert overwrite table <table_name_1>
+	select c1, c2, ............. from  t1
+	insert overwrite table <table_name_2>
+	select c1, c2, ............. from  t1;
+
+
+
+ALTER 
+-------
+FORMAT of the input load file
+
+alter table <table_name>
+set SERDEPROPERTIES ('field.delim' = ',')
+
+RENAME
+----------
+alter table old_tn to new_tn;
+alter table tn add columns (COLUMN_NAME datatype);
+alter table replace COLUMN_NAME (<give columns which you want and dont mention COLUMN_NAME which you want to delete)
+
+DELETE
+----------
+truncate table table_name; ---- hdfs dir will continue to exists
+
+
+
+DELETING and UPDATING hive
+-----------------------------
+where statement - hive doesnt allow to delete specific batch of data 
+-- select required data from source table into temp table_name
+-- truncate source table
+-- push back data from temp table into source table_name
+-- drop temp table_name
+
+
+
+
+
+==================================================================
+METASTORE
+==================================================================
+store metadata in relational database
+
+database ids
+table ids
+index ids
+index creation time
+table creation time
+partition information
+bucketing information
+
+
+default location - properties
+----------------------------------
+hive.metastore.warehouse.dir ==== very very important ---- /user/hive/warehouse
+
+
+managed tables -- internal tables
+
+	/user/hive/warehouse/STUDENTS
+								--- /FILE-1
+								--- /FILE-2
+								--- /FILE-3
+
+
+
+
+
+
+
+HIVE CLI
+==========
+
+hive -e 'select * from .......... where x="M";'
+
+hive -f sql_script.sql --- execute statements insde the .sql file
+
+
+Hive FUNCTIONS
+=================
+
+STANDARD FUNCTIONS  --- one per each row, columns
+
+AGGREGATE FUNCTIONS --- grouping results
+
+TABLE GENERATING FUNCTIONS -- operate 1 row of data ---- multiple rows of output
+						   -- arrays, maps, struct
+						   -- explode (arrays(1,2,3))
+
+							EXPLODE() -- used for collection DATATYPES
+									  -- 1 row per collection input and multiple row output
+									  -- group more like information and store redundant datatype
+									  -- reduce disk seeks
+									  -- process one table and store dense information in table
+									  -- denormalized table
+
+
+Avoid Joins in Hive/ Embedd all tables into single table and reduce disk seeks
+
+
+		EMP_ID			ENAME 		 ADDRESS	     SUBORDINATES
+		-------			------		----------		---------------
+		1				JOHN		 <STRUCT>		   <ARRAY>
+
+
+
+select explode(Subordinates) from emp where EMP_ID = 1
+
+Joe
+Jolly
+Juan
+
+
+
+LATERAL VIEW
+--------------
+perform a join between main table and exploded table (LATERAL VIEW)
+
+select ename, exp.Subordinates  ----- derieved column from exploded temp table 
+  from emp
+ LATERAL VIEW explode (Subordinates) exp  --- temp table in form of LATERAL view to perform self join
+ AS Subordinates -- column alias for derieved column to be used in select query <table_name>.<derieved_col_name>
+ where EMP_ID = 1
+
+
+Analytical FUNCTIONS
+==========================
+
+show FUNCTIONS
+describe function <function_name>
+describe extended function <function_name>
+
+
+
+SUBQUERIES
+=============
+
+Bag UNION - UNION ALL of sql -- contains dups
+Set UNION - UNION of sql -- cannot contain dups
+
+Does not support - Intersect and Minus
+
+
+SUBQUERIES --- only from and where clause 
+		   --- not in select, group by, having
+
+
+		   --- WHERE ---- via IN/NOT IN or EXISTS/NOT EXISTS --- cannot have = 
+		   --- IN and NOT IN ---- select single column only
+
+		   -- EXISTS --- subquery needs to be correlated to outer query
+		   			 --- columns have to be in lower case 
+		   			 --- select 1,....
+		   			        from T1
+		   			       where EXISTS
+		   			       				(select 1,... 
+		   			       					from T2 
+		   			       				 where T2.c1 = T1.c1)
+
+		  Hive does not allow 2 subquery at same level in outer query
+		  only 1 subquery expression is allowed
+		  you can turnaround by writing nested sub queries
+
+
+
+
+
+create complex table
+=======================
+
+create table employee
+( 
+	emp_id int,
+	firstname varchar(30),
+	lastname varchar(30),
+	tenure int,
+	address struct<street:string, city:string>
+	Subordinates array<string>
+)
+
+
+
+insert into employees 
+	
+	select 1,"herin","dharod",10, 
+					named_struct("street","90 feet","city","mumbai"), array("John","Joe","Jule") 
+	union all
+	select 2,"van","helsing",3, 
+					named_struct("street","bevearly hills","city","las angeles"), array("Spider","Bat","Iron") 
+	union all
+	select 3,"peter","parker",5, 
+					named_struct("street","strip street","city","las vegas"), array("Spider","Bat","Iron")
+
+
+
+
+
+
+
+
+
+
+==============================
+PARTITION - Managed tables
+==============================
+
+
+partitioned is created in table -- partitioned by (paritioned-column-name column-data-type,paritioned-column-name column-data-type)
+
+Note --- Partitioned columns cannot be stated in partitioned by clause
+     --- can be done only while creating table - cannot be paritioned 
+     --- order by sequence is sequence of nested directories - level of nesting in order of declaration  
+
+
+
+CREATE TABLE table_name 
+(
+col1 datatype,
+col2 datatype
+)
+partitioned by (paritioned-column-name column-data-type)
+
+
+
+CREATE TABLE table_name 
+(
+col1 datatype,
+col2 datatype
+)
+partitioned by (order_date date)
+
+
+/user/hive/warehouse/
+					 SALES-DATA-DATE=PARTITION
+									 	  --- /DATE=2018-01-01/
+									 								---FILE-1
+									 	  --- /DATE=2018-01-02
+									 								---FILE-1			 		
+									 	  --- /DATE=2018-01-03
+									 								---FILE-1			 		
+									 	  --- /DATE=2018-01-04
+									 								---FILE-1
+
+
+
+CREATE TABLE table_name 
+(
+col1 datatype,
+col2 datatype
+)
+partitioned by (order_date date, product varchar(30))
+
+
+/user/hive/warehouse/
+					 SALES-DATA-DATE=PARTITION
+									 	  --- /DATE=2018-01-01/
+									 	  					   PRODUCT = LIFE/
+									 								          FILE-1
+									 	  --- /DATE=2018-01-02
+									 	  					   PRODUCT = HEALTH/
+									 								          FILE-1			 		
+									 	  --- /DATE=2018-01-03
+									 	  					   PRODUCT = LOAN/
+									 								          FILE-1			 		
+									 	  --- /DATE=2018-01-04
+									 	  					   PRODUCT = CASH/
+									 								          FILE-1
+
+
+
+Query 
+=====
+BAU - Use the parition column used frequently in where conditions
+
+
+Insert into partition
+=======================
+
+insert into table_name                    --- make sure you dont have partition COLUMN values in insert 
+partition (order_date = '2018-01-01')
+VALUES
+(1,2,3,4,5),
+(1,2,3,4,5),
+(1,2,3,4,5);
+
+
+
+CTAS --- partition COLUMN_NAME
+insert --- partition column_value
+
+
+Dynamic Partitioning
+-------------------------
+
+
+
+
+
+
+
+
