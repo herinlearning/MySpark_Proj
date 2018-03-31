@@ -1,0 +1,220 @@
+http://stackoverflow.com/questions/21820715/how-to-install-latest-version-of-git-on-centos-6-x-7-x
+https://www.kernel.org/pub/software/scm/git/
+
+
+git status --- get the status of newly committed code in local repo -- also state that we are on branch master 
+git add <Filename> -- to add the file the local stage area and make it ready to commit - its currently staged
+git commit -m <"comment to be given to track the commit"> --- takes snapshot of stage and add to the timeline
+
+Modify file
+----------
+modify file in the local area
+git add --all --- all new , modified or deleted to the stage
+git status --- see all modified and newly added file listed in stage
+git commit -m "<Comment>"
+
+History
+-------
+git log --- get history of the commits offering date and comment message
+
+Different ways to add command
+-----------------------------
+git add <list of files>  -- list of files
+git add -all			 -- all files
+git add *.txt			 -- all txt files
+git add dir/*.txt		 -- add all text files in dir directory
+git add dir/			 -- add all files in dir directory
+git add "*.txt"			 -- add all text files in entire project
+
+
+
+
+Use the command git config --global user.name "Any Name" to set your user name
+$ git config --global user.name "Herin"
+$ git config --global user.email "sandeep.vadra@gmail.com"
+
+$ git init 
+Initialized empty Git repository in /.git/
+
+[edureka@localhost ~]$ git config --global user.name "herin"
+[edureka@localhost ~]$ git config --global user.email "dharod.herin@gmail.com"
+
+git checkout -b newbranch -- create a new branch
+git branch -- list of branches available (master and newbranch)
+
+To do -- edit or modify one file 
+
+git status -- show the modified file
+git commit -m <comment> ---- commit the file (m stands for message)
+
+git branch
+		master
+		newbranch
+
+git branch <branchname>--- git create new branch with name passed in the argument passed
+git push origin newbranch -- push the modified file to newbranch
+
+To do - goto github website -- click pull request
+this is to merge the file from newbranch to master branch
+and then click pull and merge after you review the difference
+after the files are merged and pushed to master - delete the newbranch created temporary to push the code temporarily.
+
+git branch --- 
+master
+* newbranch --- * shows that i am on newbranch
+
+switch to master
+git checkout master --- switch from newbranch to master branch
+
+git pull origin master --  everyday in morning refresh your own local master copy at machine to get refreshed data
+
+
+
+
+
+git clone --- http://github.com/learntoc
+
+
+
+
+-------------------------------------------------------------------------------------
+git clone https://github.com/herind/hdgit.github.io.git
+
+goto /home/edureka/hdgit.github.io
+touch index.html
+git status
+git add index.html
+git push origin master
+
+
+----------------------------------------------------------------------------------------------
+Diffential comparison
+
+
+LOCAL REPOSITORY 		STAGING AREA 		FINAL REPOSITORY
+----------------		------------		------------------
+	v1						v2
+
+git diff --- without any agruments will show the difference between local repository and staging area
+
+
+LOCAL REPOSITORY 		STAGING AREA 		FINAL REPOSITORY
+----------------		------------		------------------
+							v2						v2
+git diff --staged === will show any difference of files between staging area and final repository
+
+
+LOCAL REPOSITORY 		STAGING AREA 		FINAL REPOSITORY
+----------------		------------		------------------
+												v1 --- id1
+												v2 --- id2
+git diff id1 id2 --- will show differnece bw already committed file at level id1 and level id2
+
+
+
+
+
+
+Viewing the commit history across the branches to compare
+---------------------------------------------------------
+git log --graph --oneline <branch1> <branch2>
+git log --graph --oneline master coins.
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+$ git init 
+Initialized empty Git repository in /.git/
+
+
+make change go any file in local directory
+to see the difference b/w lsat commit and change in file
+
+$git diff <filename>
+
+git checkout HEAD Filename  : Discards changes in the working directory.
+git reset HEAD filename     : Unstages file changes in the staging area.
+git reset SHA               : Can be used to reset to a previous commit in your commit history.
+
+
+git branch 					: Lists all a Git projects branches.
+git branch branch_name		: Creates a new branch.
+git checkout branch_name	: Used to switch from one branch to another.
+git merge branch_name		: Used to join file changes from one branch to another.
+git branch -d branch_name	: Deletes the branch specified.
+
+git clone remote_location clone_name	: remote_location could be a web address, or a filepath of exisiting repository : /Users/teachers/Documents/some-remote
+git fetch								: Fetch to clone  -  any new changes made to origin repository from which clone was done.
+git push origin your_branch_name		: will push your branch up to the remote, origin
+
+
+To do branch
+------------
+Fetch and merge changes from the remote
+Create a branch to work on a new project feature
+Develop the feature on your branch and commit your work
+Fetch and merge from the remote again (in case new commits were made while you were working)
+Push your branch up to the remote for review
+
+
+
+pages.github.com
+guthubschool.github.io/github-games
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+Fork
+-----
+fork means serverside copy of repository into your personal user repository
+Where should be forked this repository
+forking means - forked from existing organizational repository to your current id repository
+				any changes going on in the main org repository would not reflect on the forked repository
+
+
+				edit website - from organizational website link to local id repository id
+				https://<username>.github.io/github-games
+
+				read me file
+
+
+cd scratch
+git clone https://github.com/<usrname>/github-games
+cd github-games
+git branch
+git branch readme-update ---- create a branch locally on machine
+git branch ---- 2 branch visible
+git branch checkout readme-update --- switch to branch
+edit readme file ---- https://<org_name> to <username>
+git status --- modified file
+git add readme
+git status --- view new staged file
+git commit -m <"commit message">
+git branch --all ------ you dont see the readme-update branch on the remote repository (/remote/origin/game-instructions <red color read only branch>)
+
+git push --set-upstream origin readme-update
+						 to 	where 
+
+						--set-upstream
+						origin - `name of the remote`
+						readme-update - name of the branch
+
+---- branch created on github.com --- locally created branch on machine is pushed to username/branch on github.com
+---- hop over to github.com 
+	 click pull request
+	 make sure head fork --- to point to my copy
+	 make sure base fork --- <org_name> to <username>
+
+	click <code> 
+	click compare across forks
+	give base fork base_branch <username> head fork head_branch <username> --- this brings you back to username repository
+	give correct branchname -- gh-pages to readme-update
+	pull request and merge the code for readme.txt
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+git checkout gh-pages --- switch to main branch
+git pull --- everyday in the morning to pull any changes on the branch into local repository
+		 --- git fetch and update local
+
+git branch --all
+git checkout stats-update
+
