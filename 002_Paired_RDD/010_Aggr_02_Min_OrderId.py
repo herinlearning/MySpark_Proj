@@ -14,7 +14,7 @@ input_file = sys.argv[2]
 orderItems = sc.textFile(input_file)
 
 
-orderItemsFilter = orderItems.filter( lambda oi: int(oi.split(",")[1]) == 2)
+orderItemsFilter = orderItems.filter(lambda oi: int(oi.split(",")[1]) == 2)
 # 2,2,1073,1,199.99,199.99
 # 3,2,502,5,250.0,50.0
 # 4,2,403,1,129.99,129.99

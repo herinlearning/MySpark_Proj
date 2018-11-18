@@ -1,3 +1,6 @@
+# Get revenue per Order Id
+
+
 from pyspark import SparkConf, SparkContext
 import os
 import sys
@@ -24,4 +27,19 @@ for i in revenuePerOrderId.take(10):
 revenuePerOrderId = orderItemsMap.reduceByKey(add)
 
 for i in revenuePerOrderId.take(10):
+    print i
+
+
+# Get minimum revenue per Order Id
+
+minRevenuePerOrderId = orderItemsMap.reduceByKey(lambda x,y: x if(x<y) else y)
+
+for i in minRevenuePerOrderId.take(10):
+    print i
+
+
+# Get revenue per Order Id with full record for OrderId
+orderItemsMap = orderItems.map(lambda oi: (int(oi.split(",")[1]), oi))
+minRevenuePerOrderIdFull = orderItemsMap.reduceByKey(lambda x, y: x if(float(x.split(",")[4]) < float(y.split(",")[4])) else y)
+for i in minRevenuePerOrderIdFull.take(10):
     print i

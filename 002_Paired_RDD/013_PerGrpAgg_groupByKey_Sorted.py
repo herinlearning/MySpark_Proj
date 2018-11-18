@@ -1,4 +1,4 @@
-# get the order id in sorted manner by highest amount
+# get the order id in sorted manner by highest amount (sort by desc order for order amount)
 
 from pyspark import SparkContext, SparkConf
 import sys

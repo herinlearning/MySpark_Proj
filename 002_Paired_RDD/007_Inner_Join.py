@@ -17,10 +17,14 @@ orders = sc.textFile(input_path + input_order_file)
 orderItems = sc.textFile(input_path + input_order_items_file)
 
 ordersMap = orders.map(lambda o: (int(o.split(",")[0]), o.split(",")[1]))
+
 orderItemsMap = orderItems.map(lambda o: (int(o.split(",")[1]), o.split(",")[4]))
 
 # Inner Join
 orderItemsJoin = ordersMap.join(orderItemsMap)
+
+for i in orderItemsJoin.take(5):
+    print i
 
 # select the key and revenue from 2nd field
 orderItemsMapJoin = orderItemsJoin.map(lambda oij: (oij[0], float(oij[1][1])))
