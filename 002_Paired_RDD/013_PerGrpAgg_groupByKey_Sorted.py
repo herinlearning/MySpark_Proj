@@ -12,27 +12,27 @@ conf = SparkConf().setAppName("013_PerGrpAgg_groupByKey_Sorted").setMaster(sys.a
 sc = SparkContext(conf = conf)
 
 input_file = sys.argv[2]
-
 orderItems = sc.textFile(input_file)
 
-orderItemsMap = orderItems.map(lambda oi: (int(oi.split(",")[1]), oi))
 
+orderItemsMap = orderItems.map(lambda oi: (int(oi.split(",")[1]), oi))
 orderItemsGrpBy = orderItemsMap.groupByKey()
 
+
+# Trial to view the sorting method
 for i in orderItemsGrpBy.take(2):
     print list(i[1])
     print sorted(i[1], key = lambda k: float(k.split(",")[4]), reverse=True)
 
 
-orderItemsSortedMap = orderItemsGrpBy.map(lambda oig: sorted(oig[1], key = lambda k: float(k.split(",")[4]), reverse = True))
 
+# Using map to view the sorted data
+orderItemsSortedMap = orderItemsGrpBy.map(lambda oig: sorted(oig[1], key = lambda k: float(k.split(",")[4]), reverse = True))
 for i in orderItemsSortedMap.take(10):
     print i
 
 
 # Transposing the flattened map iterable to individual row - Use flatMap
-
 orderItemsSorted = orderItemsGrpBy.flatMap(lambda oig: sorted(oig[1], key = lambda k: float(k.split(",")[4]), reverse = True))
-
 for i in orderItemsSorted.take(10):
     print i
