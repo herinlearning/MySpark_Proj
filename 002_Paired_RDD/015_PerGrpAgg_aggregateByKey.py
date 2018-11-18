@@ -26,6 +26,31 @@ revenueCountPerItem = orderItemsMap.aggregateByKey \
                       lambda x, y: (x[0] + y[0], x[1] + y[1])
         )
 
+#Comment
+"""
+(2, 199.99)
+(2, 250.0)
+(2, 129.99)
+
+initialization value - based on desired output
+final output is (2, (579.98,3)) -- a tuple --- (0.0,0)
+
+lambda 1 - combiner logic
+x - datatype of tuple based on desired output  - tuple
+y - datatype of input value 		 		   - float
+---> (x[0] + y, x[1] + 1)
+
+first 	iteration - (2, 199.99) -- (199.99, 1) ==> ( (0.0 + 199.99), 0+1 ) ==> (199.99,1)
+second 	iteration - (2, 250.0)  -- (250.0 , 1) ==> ( (199.99 + 250.0), 1+1 ) ==> (449.99,2)
+third	iteration - (2, 129.99) -- (129.99, 1) ==> ( (449.99 + 129.99), 2+1 ) ==> (579.98,3)
+
+lambda 2 - reducer logic
+x - datatype of tuple based on desired output  - tuple
+y - datatype of tuple based on desired output  - tuple
+---> (x[0] + y[0], x[1] + y[1])
+
+"""
+
 
 for i in revenueCountPerItem.take(10):
     print i
