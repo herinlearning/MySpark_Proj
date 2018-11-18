@@ -1,6 +1,7 @@
 #Read raw file - convert into RDD - perform transformation & actions on RDD
 
 # from pyspark import SparkConf, SparkContext
+from pyspark import SparkConf, SparkContext
 import sys
 
 #Define conf and spark context
