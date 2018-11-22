@@ -32,7 +32,6 @@ sc = SparkContext(conf = conf)
 
 
 
-
 orders = sc.textFile(sys.argv[2])
 for i in orders.take(10):  print(i)
 
