@@ -30,8 +30,8 @@ for i in revenuePerOrderId.take(10):
 revenuePerOrderId = orderItemsMap.reduceByKey(lambda x, y: x + y).map(lambda s: str(s[0]) + "\t" + str(round(s[1])))
 
 #Save as textFile
-revenuePerOrderId.saveAsTextFile("/user/shailee1/output_files/revenuePerOrderId")
+revenuePerOrderId.saveAsTextFile("/user/hdharod/output_files/revenuePerOrderId")
 
 
 #Save as textFile with compression
-revenuePerOrderId.saveAsTextFile("/user/shailee1/output_files/revenuePerOrderId_compressed", compressionCodecClass="org.apache.hadoop.io.compress.SnappyCodec")
+revenuePerOrderId.saveAsTextFile("/user/hdharod/output_files/revenuePerOrderId_compressed", compressionCodecClass="org.apache.hadoop.io.compress.SnappyCodec")
