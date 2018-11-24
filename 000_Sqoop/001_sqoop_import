@@ -1,0 +1,633 @@
+SQOOP
+======
+Help command - sqoop help eval
+
+============================================================================================================================================================================================================
+
+-------------------------
+Validation arguments
+-------------------------
+
+sqoop list-databases \
+  --connect "jdbc:mysql://<hostname>" \
+  --username username \
+  --password <hidden>
+
+
+sqoop list-tables \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username username \
+  --password <hidden>
+
+
+sqoop eval \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username username \
+  --password <hidden> \
+  --query "select count(1) from order_items"
+
+
+operate DDL\ DML\ functions
+-----------------------------
+sqoop eval \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username username \
+  --password <hidden> \
+  --query "INSERT INTO foo VALUES(42, 'bar')"
+
+
+sqoop options file
+---------------------
+sqoop eval --options-file /users/homer/work/import.txt --query "select count(1) from customers"
+
+        vi /home/userdir/paramfiles/sqoop_options_import.txt
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        --connect
+        jdbc:mysql://ms.itversity.com:3306/retail_db
+        --username
+        retail_user
+        --password
+        itversity
+
+
+============================================================================================================================================================================================================
+
+-------------------------
+Validation arguments
+-------------------------
+
+
+-- Reference: http://www.cloudera.com/content/cloudera/en/developers/home/developer-admin-resources/get-started-with-hadoop-tutorial/exercise-1.html
+-- import happens directly to hive warehouse via staging HDFS files
+
+
+sqoop import-all-tables \
+--connect "jdbc:mysql://<hostname>:3306/userdir" \
+--username userdiruser \
+--password <hidden> \
+--as-textfile \
+--warehouse-dir=/user/hive/warehouse/shailee_stage.db
+-m 12
+--exclude-tables order_items_nopk
+
+
+
+Default <source tablename + target directory + format of exported file>
+--------------------------------------------------------------------------
+
+as-textfile
+###########
+
+sqoop import \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --table departments \
+  --as-textfile \
+  --target-dir=/user/userdir/hdfs_file/userdir/datadump
+
+as-sequencefile
+###############
+
+sqoop import \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --table departments \
+  --as-sequencefile \
+  --target-dir=/user/userdir/sqoop_import/departments
+
+
+as-avrodatafile
+#################
+Q1)
+Using sqoop, import orders table into hdfs to folders /user/cloudera/problem1/orders.
+File should be loaded as Avro File and use snappy compression.
+
+Q2)
+Using sqoop, import order_items  table into hdfs to folders /user/cloudera/problem1/order-items.
+Files should be loaded as avro file and use snappy compression
+
+
+sqoop import \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --table orders \
+  --as-avrodatafile \
+  --compress \
+  --compression-codec org.apache.hadoop.io.compress.SnappyCodec \
+  --target-dir=/user/userdir/hdfs_file/userdir_import_avro/
+
+
+-- A file with extension avsc will be created under the directory from which sqoop import is executed
+-- Copy avsc file to HDFS location
+-- Create hive table with LOCATION to /user/userdir/sqoop_import/departments and TBLPROPERTIES pointing to avsc file
+
+hadoop fs -mkdir /user/userdir/hdfs_file/userdir_import_avro_avsc/
+hadoop fs -chmod 777 /user/userdir/hdfs_file/userdir_import_avro_avsc/
+
+hadoop fs -put orders.avsc /user/userdir/hdfs_file/userdir_import_avro_avsc/
+
+-- compression should be given by default for avro datafile if you want to create hive external table pointing to this avro file
+-- make sure the avro schema avsc file is created in different location as that of datadump files.
+
+
+CREATE EXTERNAL TABLE orders_avro
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe'
+STORED AS INPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat'
+OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat'
+LOCATION 'hdfs://<hostname>:8020/user/userdir/hdfs_file/userdir_import_avro/'
+TBLPROPERTIES ('avro.schema.url'='hdfs://<hostname>:8020/user/userdir/hdfs_file/userdir_import_avro_avsc/orders.avsc');
+
+#TBLPROPERTIES ('avro.schema.url'='hdfs://quickstart.cloudera/user/userdir/sqoop_import/sqoop_import_departments.avsc');
+
+-- It will create tables in default database in hive
+-- Using snappy compression
+
+=================================================================================================================================================================================================================================
+
+
+
+-- As we have imported all tables before make sure you drop the directories
+-- Launch hive drop all tables
+drop table departments;
+drop table categories;
+drop table products;
+drop table orders;
+drop table order_items;
+drop table customers;
+
+-- Dropping directories, in case your hive database/tables in consistent state
+hadoop fs -rm -R /user/hive/warehouse/departments
+hadoop fs -rm -R /user/hive/warehouse/categories
+hadoop fs -rm -R /user/hive/warehouse/products
+hadoop fs -rm -R /user/hive/warehouse/orders
+hadoop fs -rm -R /user/hive/warehouse/order_itmes
+hadoop fs -rm -R /user/hive/warehouse/customers
+
+sqoop import-all-tables \
+  --num-mappers 1 \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --hive-database userdir_import_db
+  --hive-import \
+  --hive-overwrite \
+  --create-hive-table \
+  --compress \
+  --compression-codec org.apache.hadoop.io.compress.SnappyCodec \
+  --outdir java_files
+
+  <compression codec can be found from /etc/hive/conf
+
+sudo -u hdfs hadoop fs -mkdir /user/userdir/sqoop_import/userdirstage
+sudo -u hdfs hadoop fs -chmod +rw /user/userdir/sqoop_import/userdirstage
+hadoop fs -copyFromLocal ~/*.avsc /user/userdir/sqoop_import/userdirstage
+
+=================================================================================================================================================================================================================================
+
+-- Basic import
+
+sqoop import \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --table departments \
+  --target-dir /user/userdir/sqoop_import/departments
+
+
+
+-- Boundary Query and columns
+
+boundary-query : To avoid improper splits of data skewed -
+For example - data is skewed between 1000 and 2000 but PK is starting with 1 - 5000 ===
+you can write boundary-query with where clause = PK>1000 and PK<2000 === the splits will be somewhat equivalent
+Though it wont ignore the earlier data - it is not filtering - it is purely used for boundary-query evaluation to avoid data skewness - mainly during QA testing
+
+
+
+sqoop import \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --table departments \
+  --target-dir /user/userdir/sqoop_import/departments \
+  -m 2 \
+  --boundary-query "select 2, 8 from departments limit 1" \
+  --columns department_id,department_name
+
+
+
+-- query and split-by
+
+sqoop import \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --query="select * from orders join order_items on orders.order_id = order_items.order_item_order_id where \$CONDITIONS" \
+  (or we can write it as:   --query="select * from orders join order_items where \$CONDITIONS and orders.order_id = order_items.order_item_order_id"  \)
+  --target-dir /user/userdir/sqoop_import/order_join \
+  --split-by order_id \
+  --num-mappers 4
+
+\$CONDITIONS will be replaced by 1=1
+
+=================================================================================================================================================================================================================================
+
+--append to target directory
+
+
+-- Copying into existing table or directory (append)
+-- Customizing number of threads (num-mappers)
+-- Changing delimiter
+
+sqoop import \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --table departments \
+  --target-dir /user/hive/warehouse/username_ods.db/departments \
+  --append \
+  --fields-terminated-by '|' \
+  --lines-terminated-by '\n' \
+  --num-mappers 1 \
+  --outdir java_files
+
+
+=================================================================================================================================================================================================================================
+
+--No PK in the table --- usage of --split-by
+
+
+// Importing table with out primary key using multiple threads (split-by)
+// When using split-by, using indexed column is highly desired
+// If the column is not indexed then performance will be bad
+// because of full table scan by each of the thread
+// table should have indexed or it the column of split by should be sparse (as many unique values as possible)
+// If the data is dense (like date column), then skew will be higher
+
+
+sqoop import \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --table departments \
+  --target-dir /user/hive/warehouse/username_ods.db/departments \
+  --append \
+  --fields-terminated-by '|' \
+  --lines-terminated-by '\n' \
+  --split-by department_id \
+  --outdir java_files
+
+
+=================================================================================================================================================================================================================================
+
+// Primary key is mostly used to split the records -- these are mainly numeric columns
+// lets say you want sqoop to divide the dataset by string column
+// When you run sqoop it will fail showing warning ===== -Dorg.apache.sqoop.splitter.allow_text_splitter=true
+// Error : 18/01/27 20:10:52 ERROR tool.ImportTool: Encountered IOException running import job: java.io.IOException: Generating splits for a textual index column allowed only in case of "-Dorg.apache.sqoop.splitter.allow_text_splitter=true" property passed as a parameter
+
+
+sqoop import \
+-Dorg.apache.sqoop.splitter.allow_text_splitter=true \
+--connect "jdbc:mysql://<hostname>:3306/userdir" \
+--username userdiruser \
+--password <hidden>  \
+--table orders  \
+--as-textfile  \
+--target-dir /user/userdir/import/order_no_pk/  \
+--split-by order_status  \
+-m 4
+
+
+18/01/27 20:15:35 INFO db.DBInputFormat: Using read commited transaction isolation
+18/01/27 20:15:35 INFO db.DataDrivenDBInputFormat: BoundingValsQuery: SELECT MIN(`order_status`), MAX(`order_status`) FROM `orders`
+18/01/27 20:15:35 WARN db.TextSplitter: Generating splits for a textual index column.
+18/01/27 20:15:35 WARN db.TextSplitter: If your database sorts in a case-insensitive order, this may result in a partial import or duplicate records.
+18/01/27 20:15:35 WARN db.TextSplitter: You are strongly encouraged to choose an integral split column.
+18/01/27 20:15:35 INFO mapreduce.JobSubmitter: number of splits:5
+
+=================================================================================================================================================================================================================================
+//Compressions
+============
+goto - /etc/hadoop/conf
+less core-site.xml
+
+    <property>
+      <name>io.compression.codecs</name>
+      <value>org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.SnappyCodec</value>
+    </property>
+
+
+gzip/ SnappyCodec/
+
+--compress (by default compression codec will be gunzip gz)
+--compression-codec org.apache.hadoop.io.compress.SnappyCodec
+
+
+
+=================================================================================================================================================================================================================================
+
+
+// Delta  Load
+// Filtering
+// Getting delta (--where)
+
+sqoop import \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --table departments \
+  --target-dir /user/hive/warehouse/username_ods.db/departments \
+  --append \
+  --fields-terminated-by '|' \
+  --lines-terminated-by '\n' \
+  --split-by department_id \
+  --where "department_id  7" \
+  --outdir java_files
+  --null-non-string -1
+
+
+=================================================================================================================================================================================================================================
+
+-- Incremental load
+
+// --check-column
+// --incremental append
+// --last-value 7
+
+
+
+sqoop import \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --table departments \
+  --target-dir /user/hive/warehouse/username_ods.db/departments \
+  --append \
+  --fields-terminated-by '|' \
+  --lines-terminated-by '\n' \
+  --check-column "department_id" \
+  --incremental append \
+  --last-value 7 \
+  --outdir java_files
+
+
+
+sqoop job --create sqoop_job \
+  -- import \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --table departments \
+  --target-dir /user/hive/warehouse/username_ods.db/departments \
+  --append \
+  --fields-terminated-by '|' \
+  --lines-terminated-by '\n' \
+  --check-column "department_id" \
+  --incremental append \
+  --last-value 7 \
+  --outdir java_files
+
+
+=================================================================================================================================================================================================================================
+
+-- Incremental load
+
+
+
+sqoop job --list
+
+sqoop job --show sqoop_job
+
+sqoop job --exec sqoop_job
+
+=================================================================================================================================================================================================================================
+
+=================================================================================================================================================================================================================================
+
+-- HIVE
+
+-- Hive related
+-- Overwrite existing data associated with hive table (hive-overwrite)
+
+
+//shortcut to remember in command =
+sqoop import basics connectivity + hive import + hive db & table + hive Overwrite
+
+
+
+sqoop import \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --table departments \
+  --fields-terminated-by '|' \
+  --lines-terminated-by '\n' \
+  --hive-home /user/hive/warehouse/username_ods.db \
+  --hive-import \
+  --hive-overwrite \
+  --hive-table departments \
+  --outdir java_files
+
+
+//--hive-database -- give the database name
+//--hive-table <database_name>.<table_name> --- no need to provide --hive-database command
+
+=================================================================================================================================================================================================================================
+
+
+//create-hive-table : Will fail the hadoop job if the hive table exists
+//it wont create new hive table if it doesnt exists - its useless command
+
+
+--Create hive table example
+sqoop import \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --table departments \
+  --fields-terminated-by '|' \
+  --lines-terminated-by '\n' \
+  --hive-home /user/hive/warehouse \
+  --hive-import \
+  --hive-table departments_test \
+  --create-hive-table \
+  --outdir java_files
+
+=================================================================================================================================================================================================================================
+
+--Import all tables
+
+
+
+
+
+
+
+--Initial load
+sqoop import \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --table departments \
+  --as-textfile \
+  --target-dir=/user/userdir/sqoop_import/sqoop_merge/departments
+
+
+
+
+
+
+
+
+--Validate
+sqoop eval --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username username \
+  --password <hidden> \
+  --query "select * from departments"
+
+hadoop fs -cat /user/userdir/sqoop_import/sqoop_merge/departments/part*
+
+
+--update
+sqoop eval --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username username \
+  --password <hidden> \
+  --query "update departments set department_name='Testing Merge' where department_id = 9000"
+
+
+--Insert
+sqoop eval --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username username \
+  --password <hidden> \
+  --query "insert into departments values (10000, 'Inserting for merge')"
+
+
+sqoop eval --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username username \
+  --password <hidden> \
+  --query "select * from departments"
+
+
+
+--New load
+sqoop import \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
+  --username=username \
+  --password <hidden> \
+  --table departments \
+  --as-textfile \
+  --target-dir=/user/userdir/sqoop_import/sqoop_merge/departments_delta \
+  --where "department_id = 9000"
+
+hadoop fs -cat /user/userdir/sqoop_import/sqoop_merge/departments_delta/part*
+
+--Merge
+sqoop merge --merge-key department_id \
+  --new-data /user/userdir/sqoop_import/sqoop_merge/departments_delta \
+  --onto /user/userdir/sqoop_import/sqoop_merge/departments \
+  --target-dir /user/userdir/sqoop_import/sqoop_merge/departments_stage \
+  --class-name departments \
+  --jar-file <get_it_from_last_import>
+
+hadoop fs -cat /user/userdir/sqoop_import/sqoop_merge/departments_stage/part*
+
+--Delete old directory
+hadoop fs -rm -R /user/userdir/sqoop_import/sqoop_merge/departments
+
+--Move/rename stage directory to original directory
+hadoop fs -mv /user/userdir/sqoop_import/sqoop_merge/departments_stage /user/userdir/sqoop_import/sqoop_merge/departments
+
+--Validate that original directory have merged data
+hadoop fs -cat /user/userdir/sqoop_import/sqoop_merge/departments/part*
+
+--Merge process ends
+
+
+
+
+num-mappers = -m
+divide the primary key into m range and upload in different mappers
+
+without primary keys - use split-by where it do not primary key to introduce parallelism
+--check-column
+--incremental
+--last-value
+
+
+
+
+sqoop import \
+--connect "jdbc:mysql://<hostname>/retail_db" \
+--username=username \
+--password <hidden> \
+--query="select * from orders join order_items on orders.order_id = order_items.order_item_order_id where \$CONDITIONS"  \
+--split-by order_id \
+--num-mappers 6 \
+--target-dir /user/userdir/sqoop_import/order_item_join_import_2/ \
+--fields-terminated-by '^' \
+--lines-terminated-by '\n' \
+--outdir java_files \
+--where "order_id <10000"
+
+
+
+[userdir@gw01 ~]$ sqoop import \
+ --connect "jdbc:mysql://<hostname>/retail_db" \
+ --username=username \
+ --password <hidden> \
+ --table departments \
+ --fields-terminated-by '~' \
+ --lines-terminated-by '\n' \
+ --hive-database userdir \
+ --hive-import \
+ --create-hive-table \
+ --hive-overwrite \
+ --m 8
+
+
+
+
+--delete-target-dir ---- delete existing directory and replace with new directory during load
+
+
+shell script developed to create files in the hdfs from oracle tables
+#!/usr/bin/sh
+export import_dt=`date "+%d%m%Y%H%M%S"`
+export main_dirs="/user/`whoami`/workshop201711_username_db/"
+export log_dirs="/home/`whoami`/"
+#echo $main_dirs
+#echo $import_dt
+export list_tables="categories,customers,departments,order_items,orders,products"
+for tablename in `echo $list_tables | tr ',' '\n'`; do
+export err_file="${log_dirs}logs/sqoop_err_${tablename}_${import_dt}.err"
+export log_file="${log_dirs}logs/sqoop_log_${tablename}_${import_dt}.log"
+export out_file="${log_dirs}logs/sqoop_out_${tablename}_${import_dt}.out"
+export tgt_dir="${main_dirs}${tablename}_${import_dt}"
+export sqoop_cmd="import \
+  --connect jdbc:mysql://<hostname>:3306/userdir \
+  --username userdiruser \
+  --password <hidden> \
+  --table ${tablename} \
+  --target-dir ${tgt_dir} \
+  --num-mappers 6"
+echo $sqoop_cmd
+#echo $err_file
+#echo $log_file
+#echo $out_file
+#echo $tablename
+sqoop ${sqoop_cmd}  0>${err_file} 1>${out_file} 2>${log_file}
+done
+
+
+
+
+
+
+autoreset-to-one-mapper : handle tables without primary key - it takes -m 1 by default
+--verbose : see the logs generated in verbose mode
+
+
+<hostname>:3306/
