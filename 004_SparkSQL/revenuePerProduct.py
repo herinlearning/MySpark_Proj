@@ -30,7 +30,7 @@ ordersDF = orders.map( lambda o:
 					order_customer_id = int(o.split(",")[2]),
 					order_status      = o.split(",")[3]
 				)
-					 ).toDF()
+			         ).toDF()
 
 order_itemsDF = orderItems.map( lambda oi:
 			Row(
@@ -38,14 +38,14 @@ order_itemsDF = orderItems.map( lambda oi:
 					order_item_product_id = int(oi.split(",")[2]),
 					order_item_subtotal   = float(oi.split(",")[4])
 			   )
-								).toDF()
+			).toDF()
 
 productsDF = products.map(lambda p:
 			Row(
 					product_id   = int(p.split(",")[0]),
 					product_name = p.split(",")[2]
 			   )
-						 ).toDF()
+			 ).toDF()
 
 
 # Register dataframe as temporary tables in hive
