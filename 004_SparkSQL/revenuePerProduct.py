@@ -34,9 +34,9 @@ ordersDF = orders.map( lambda o:
 
 order_itemsDF = orderItems.map( lambda oi:
 			Row(
-				    order_item_order_id = 	int(oi.split(",")[1]),
+					order_item_order_id   = int(oi.split(",")[1]),
 					order_item_product_id = int(oi.split(",")[2]),
-					order_item_subtotal =   float(oi.split(",")[4])
+					order_item_subtotal   = float(oi.split(",")[4])
 			   )
 								).toDF()
 
