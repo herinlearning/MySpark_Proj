@@ -77,3 +77,28 @@ sqlContext.sql("select \
 						group by o.order_date, p.product_name \
 						order by o.order_date, revenuePerProduct desc \
 ").show()
+
+
+
+# Create/ recreate hive table in database
+
+sqlContext.sql("DROP TABLE IF EXISTS shailee.daily_revenue_Spark_Sql")
+sqlContext.sql("CREATE TABLE shailee.daily_revenue_Spark_Sql (order_date string, product_name string, daily_revenue_per_product float) STORED AS orc")
+
+# Write complex query output to dataframe
+
+dailyRevenueDF = sqlContext.sql("select \
+						o.order_date, p.product_name, sum(oi.order_item_subtotal) as revenuePerProduct  \
+						from \
+						ordersDF o join order_itemsDF oi \
+						on o.order_id = oi.order_item_order_id \
+						join productsDF p \
+						on oi.order_item_product_id = p.product_id \
+						where o.order_status in ('CLOSED','COMPLETED') \
+						group by o.order_date, p.product_name \
+						order by o.order_date, revenuePerProduct desc \
+")
+
+#Insert dataframe results into Hive table
+
+dailyRevenueDF.insertInto("shailee.daily_revenue_Spark_Sql")
