@@ -24,27 +24,27 @@ products = sc.parallelize(productsRead)
 
 # Convert RDD to dataframe
 ordersDF = orders.map( lambda o:
-								 Row(
-								 	  order_id          = int(o.split(",")[0]),
-								 	  order_date        = o.split(",")[1],
-								 	  order_customer_id = int(o.split(",")[2]),
-								 	  order_status      = o.split(",")[3]
-								 	)
+			 Row(
+					order_id          = int(o.split(",")[0]),
+					order_date        = o.split(",")[1],
+					order_customer_id = int(o.split(",")[2]),
+					order_status      = o.split(",")[3]
+				)
 					 ).toDF()
 
 order_itemsDF = orderItems.map( lambda oi:
-											Row(
-												order_item_order_id = 	int(oi.split(",")[1]),
-												order_item_product_id = int(oi.split(",")[2]),
-												order_item_subtotal =   float(oi.split(",")[4])
-											    )
+			Row(
+				    order_item_order_id = 	int(oi.split(",")[1]),
+					order_item_product_id = int(oi.split(",")[2]),
+					order_item_subtotal =   float(oi.split(",")[4])
+			   )
 								).toDF()
 
 productsDF = products.map(lambda p:
-									Row(
-										product_id   = int(p.split(",")[0]),
-										product_name = p.split(",")[2]
-									   )
+			Row(
+					product_id   = int(p.split(",")[0]),
+					product_name = p.split(",")[2]
+			   )
 						 ).toDF()
 
 
