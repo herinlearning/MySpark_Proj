@@ -1,7 +1,8 @@
-# Compute daily revenue Per Product using dataframes & Spark SQL
+# Compute daily revenue Per Product using data & Spark SQL
 
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext
+from pyspark.sql import Row
 
 import sys
 import os
@@ -9,21 +10,19 @@ import os
 os.environ['SPARK_HOME'] = "C:\opt\spark\spark-1.6.3-bin-hadoop2.6"
 os.environ['HADOOP_HOME'] = "C:\winutils"
 
-
 conf = SparkConf().setAppName("001_dailyRevenuePerProduct_SparkSQL").setMaster(sys.argv[1]).setAll([("spark.core.executors","4"),("spark.core.memory","4G")])
 sc = SparkContext(conf = conf)
 sqlContext = SQLContext(sc)
 
-
-from pyspark.sql import Row
-
-
-
+# Read file from hdfs
 orders = sc.textFile(sys.argv[2])
 orderItems = sc.textFile(sys.argv[3])
 
+# Read file from local file system
+productsRead = open(sys.argv[4]).read().splitlines()
+products = sc.parallelize(productsRead)
 
-
+# Convert RDD to dataframe
 ordersDF = orders.map( lambda o:
 								 Row(
 								 	  order_id          = int(o.split(",")[0]),
@@ -33,7 +32,6 @@ ordersDF = orders.map( lambda o:
 								 	)
 					 ).toDF()
 
-
 order_itemsDF = orderItems.map( lambda oi:
 											Row(
 												order_item_order_id = 	int(oi.split(",")[1]),
@@ -41,10 +39,6 @@ order_itemsDF = orderItems.map( lambda oi:
 												order_item_subtotal =   float(oi.split(",")[4])
 											    )
 								).toDF()
-
-
-productsRead = open(sys.argv[4]).read().splitlines()
-products = sc.parallelize(productsRead)
 
 productsDF = products.map(lambda p:
 									Row(
@@ -54,16 +48,23 @@ productsDF = products.map(lambda p:
 						 ).toDF()
 
 
+# Register dataframe as temporary tables in hive
 
 ordersDF.registerTempTable("ordersDF")
 order_itemsDF.registerTempTable("order_itemsDF")
 productsDF.registerTempTable("productsDF")
 
+# Query hive stored temporary dataframe tables
+
 sqlContext.sql("select * from ordersDF").show()
 sqlContext.sql("select * from order_itemsDF").show()
 sqlContext.sql("select * from productsDF").show()
 
+# By default sparkSQL fires configured threads which is by default 200. Suppress the shuffling for low volume query.
 sqlContext.setConf("spark.sql.shuffle.partitions", "2")
+
+
+# Perform complex query to extract daily revenyue per product by date and in highest revenue order
 
 sqlContext.sql("select \
 						o.order_date, p.product_name, round(sum(oi.order_item_subtotal),2) as revenuePerProduct  \
