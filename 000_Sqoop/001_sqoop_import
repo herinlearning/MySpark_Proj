@@ -1,4 +1,3 @@
-
 SQOOP
 ======
 Help command - sqoop help eval
@@ -10,19 +9,19 @@ Validation arguments
 -------------------------
 
 sqoop list-databases \
-  --connect "jdbc:oracle://gw01367.am.hedani.net" \
+  --connect "jdbc:mysql://<hostname>" \
   --username lcdbdata \
   --password <hidden>
 
 
 sqoop list-tables \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username lcdbdata \
   --password <hidden>
 
 
 sqoop eval \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username lcdbdata \
   --password <hidden> \
   --query "select count(1) from order_items"
@@ -31,11 +30,24 @@ sqoop eval \
 operate DDL\ DML\ functions
 -----------------------------
 sqoop eval \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username lcdbdata \
   --password <hidden> \
   --query "INSERT INTO foo VALUES(42, 'bar')"
 
+
+sqoop options file
+---------------------
+sqoop eval --options-file /users/homer/work/import.txt --query "select count(1) from customers"
+
+        vi /home/lcdb/paramfiles/sqoop_options_import.txt
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        --connect
+        jdbc:mysql://ms.itversity.com:3306/retail_db
+        --username
+        retail_user
+        --password
+        itversity
 
 
 ============================================================================================================================================================================================================
@@ -50,7 +62,7 @@ Validation arguments
 
 
 sqoop import-all-tables \
---connect "jdbc:oracle://gw01367.am.hedani.net:3306/lcdb" \
+--connect "jdbc:mysql://<hostname>:3306/lcdb" \
 --username lcdbuser \
 --password <hidden> \
 --as-textfile \
@@ -67,7 +79,7 @@ as-textfile
 ###########
 
 sqoop import \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --table departments \
@@ -78,7 +90,7 @@ as-sequencefile
 ###############
 
 sqoop import \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --table departments \
@@ -98,7 +110,7 @@ Files should be loaded as avro file and use snappy compression
 
 
 sqoop import \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --table orders \
@@ -125,8 +137,8 @@ CREATE EXTERNAL TABLE orders_avro
 ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe'
 STORED AS INPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat'
 OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat'
-LOCATION 'hdfs://gw01367.am.hedani.net:8020/user/lcd/hdfs_file/lcdb_import_avro/'
-TBLPROPERTIES ('avro.schema.url'='hdfs://gw01367.am.hedani.net:8020/user/lcd/hdfs_file/lcdb_import_avro_avsc/orders.avsc');
+LOCATION 'hdfs://<hostname>:8020/user/lcd/hdfs_file/lcdb_import_avro/'
+TBLPROPERTIES ('avro.schema.url'='hdfs://<hostname>:8020/user/lcd/hdfs_file/lcdb_import_avro_avsc/orders.avsc');
 
 #TBLPROPERTIES ('avro.schema.url'='hdfs://quickstart.cloudera/user/lcd/sqoop_import/sqoop_import_departments.avsc');
 
@@ -156,7 +168,7 @@ hadoop fs -rm -R /user/hive/warehouse/customers
 
 sqoop import-all-tables \
   --num-mappers 1 \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --hive-database lcd_import_db
@@ -178,7 +190,7 @@ hadoop fs -copyFromLocal ~/*.avsc /user/lcd/sqoop_import/lcdbstage
 -- Basic import
 
 sqoop import \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --table departments \
@@ -196,7 +208,7 @@ Though it wont ignore the earlier data - it is not filtering - it is purely used
 
 
 sqoop import \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --table departments \
@@ -210,7 +222,7 @@ sqoop import \
 -- query and split-by
 
 sqoop import \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --query="select * from orders join order_items on orders.order_id = order_items.order_item_order_id where \$CONDITIONS" \
@@ -231,7 +243,7 @@ sqoop import \
 -- Changing delimiter
 
 sqoop import \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --table departments \
@@ -257,7 +269,7 @@ sqoop import \
 
 
 sqoop import \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --table departments \
@@ -279,7 +291,7 @@ sqoop import \
 
 sqoop import \
 -Dorg.apache.sqoop.splitter.allow_text_splitter=true \
---connect "jdbc:oracle://gw01367.am.hedani.net:3306/lcdb" \
+--connect "jdbc:mysql://<hostname>:3306/lcdb" \
 --username lcdbuser \
 --password <hidden>  \
 --table orders  \
@@ -323,7 +335,7 @@ gzip/ SnappyCodec/
 // Getting delta (--where)
 
 sqoop import \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --table departments \
@@ -348,7 +360,7 @@ sqoop import \
 
 
 sqoop import \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --table departments \
@@ -365,7 +377,7 @@ sqoop import \
 
 sqoop job --create sqoop_job \
   -- import \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --table departments \
@@ -407,7 +419,7 @@ sqoop import basics connectivity + hive import + hive db & table + hive Overwrit
 
 
 sqoop import \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --table departments \
@@ -432,7 +444,7 @@ sqoop import \
 
 --Create hive table example
 sqoop import \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --table departments \
@@ -456,7 +468,7 @@ sqoop import \
 
 --Initial load
 sqoop import \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --table departments \
@@ -471,7 +483,7 @@ sqoop import \
 
 
 --Validate
-sqoop eval --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+sqoop eval --connect "jdbc:mysql://<hostname>/retail_db" \
   --username lcdbdata \
   --password <hidden> \
   --query "select * from departments"
@@ -480,20 +492,20 @@ hadoop fs -cat /user/lcd/sqoop_import/sqoop_merge/departments/part*
 
 
 --update
-sqoop eval --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+sqoop eval --connect "jdbc:mysql://<hostname>/retail_db" \
   --username lcdbdata \
   --password <hidden> \
   --query "update departments set department_name='Testing Merge' where department_id = 9000"
 
 
 --Insert
-sqoop eval --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+sqoop eval --connect "jdbc:mysql://<hostname>/retail_db" \
   --username lcdbdata \
   --password <hidden> \
   --query "insert into departments values (10000, 'Inserting for merge')"
 
 
-sqoop eval --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+sqoop eval --connect "jdbc:mysql://<hostname>/retail_db" \
   --username lcdbdata \
   --password <hidden> \
   --query "select * from departments"
@@ -502,7 +514,7 @@ sqoop eval --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
 
 --New load
 sqoop import \
-  --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+  --connect "jdbc:mysql://<hostname>/retail_db" \
   --username=lcdbdata \
   --password <hidden> \
   --table departments \
@@ -548,7 +560,7 @@ without primary keys - use split-by where it do not primary key to introduce par
 
 
 sqoop import \
---connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+--connect "jdbc:mysql://<hostname>/retail_db" \
 --username=lcdbdata \
 --password <hidden> \
 --query="select * from orders join order_items on orders.order_id = order_items.order_item_order_id where \$CONDITIONS"  \
@@ -563,7 +575,7 @@ sqoop import \
 
 
 [lcd@gw01 ~]$ sqoop import \
- --connect "jdbc:oracle://gw01367.am.hedani.net/lcdb" \
+ --connect "jdbc:mysql://<hostname>/retail_db" \
  --username=lcdbdata \
  --password <hidden> \
  --table departments \
@@ -595,7 +607,7 @@ export log_file="${log_dirs}logs/sqoop_log_${tablename}_${import_dt}.log"
 export out_file="${log_dirs}logs/sqoop_out_${tablename}_${import_dt}.out"
 export tgt_dir="${main_dirs}${tablename}_${import_dt}"
 export sqoop_cmd="import \
-  --connect jdbc:oracle://gw01367.am.hedani.net:3306/lcdb \
+  --connect jdbc:mysql://<hostname>:3306/lcdb \
   --username lcdbuser \
   --password <hidden> \
   --table ${tablename} \
@@ -618,4 +630,4 @@ autoreset-to-one-mapper : handle tables without primary key - it takes -m 1 by d
 --verbose : see the logs generated in verbose mode
 
 
-gw01367.am.hedani.net:3306/
+<hostname>:3306/
